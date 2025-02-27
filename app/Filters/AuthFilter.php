@@ -40,6 +40,7 @@ class AuthFilter implements FilterInterface
             if (!$decoded) return $this->formatResponse([], 401, 'Acesso negado');
 
             $request->uid = $decoded['uid'];
+            $request->urole = $decoded['role'];
         } catch (Exception $e) {
             return $this->formatResponse([], 500, $e->getMessage());
         }

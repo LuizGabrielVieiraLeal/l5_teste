@@ -8,7 +8,7 @@ class OrderModel extends Model
 {
     protected $table = 'orders';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['status', 'user_id', 'total_value', 'created_at', 'updated_at'];
+    protected $allowedFields = ['user_id', 'status', 'created_at', 'updated_at'];
     protected $useTimestamps = true;
 
     public function user()
@@ -25,7 +25,6 @@ class OrderModel extends Model
     protected $validationRules = [
         'user_id' => 'required|integer|greater_than[0]',
         'status' => 'required|in_list[pendente,pago,cancelado]',
-        'total_value' => 'required|numeric|greater_than_equal_to[0]|decimal[2]',
     ];
 
     protected $validationMessages = [
@@ -37,12 +36,6 @@ class OrderModel extends Model
         'status' => [
             'required' => 'O campo "status" é obrigatório.',
             'in_list' => 'O campo "status" deve ser "pendente", "pago" ou "cancelado".',
-        ],
-        'total_value' => [
-            'required' => 'O campo "total_value" é obrigatório.',
-            'numeric' => 'O campo "total_value" deve ser um valor numérico.',
-            'greater_than_equal_to' => 'O campo "total_value" deve ser maior ou igual a 0.',
-            'decimal' => 'O campo "total_value" deve ter no máximo duas casas decimais.',
         ],
     ];
 }

@@ -15,7 +15,55 @@ class ProductsController extends ResourceController
         $this->model = model('ProductModel');
     }
 
-     // Listar produtos (GET api/products)
+     /**
+     * Retorna uma lista de produtos com paginação.
+     *
+     * @api {get} /api/products Listar Produtos
+     * @apiName ListProducts
+     * @apiGroup Products
+     *
+     * @apiQuery {Number} [page=1] Número da página a ser retornada.
+     * @apiQuery {Number} [perPage=10] Número de itens por página.
+     *
+     * @apiSuccessExample {json} Sucesso:
+     *     HTTP/1.1 200 OK
+     *     {
+     *         "parametros": [],
+     *         "cabecalho": {
+     *             "status": 200,
+     *             "message": "Lista de produtos retornada com sucesso"
+     *         },
+     *         "retorno": {
+     *             "data": [
+     *                 {
+     *                     "id": "5",
+     *                     "name": "Produto A",
+     *                     "description": "Descrição do Produto A",
+     *                     "price": "99.90"
+     *                 },
+     *                 {
+     *                     "id": "6",
+     *                     "name": "Produto B",
+     *                     "description": "Descrição do Produto B",
+     *                     "price": "199.90"
+     *                 }
+     *             ],
+     *             "pager": {
+     *                 "currentUri": {},
+     *                 "uri": {},
+     *                 "hasMore": false,
+     *                 "total": 2,
+     *                 "perPage": 10,
+     *                 "pageCount": 1,
+     *                 "pageSelector": "page",
+     *                 "currentPage": 1,
+     *                 "next": null,
+     *                 "previous": null,
+     *                 "segment": 0
+     *             }
+     *         }
+     *     }
+     */
     public function index()
     {
         try {
@@ -33,14 +81,38 @@ class ProductsController extends ResourceController
         }
     }
 
-    // Mostrar um produto específico (GET api/products/{id})
+    /**
+     * Retorna um produto.
+     *
+     * @api {get} /api/products/1 Buscar Produto
+     * @apiName ShowProduct
+     * @apiGroup Products
+     *
+     * @apiSuccessExample {json} Sucesso:
+     *     HTTP/1.1 200 OK
+     *     {
+     *         "parametros": [],
+     *         "cabecalho": {
+     *             "status": 200,
+     *             "message": "Produto encontrado com sucesso"
+     *         },
+     *         "retorno": {
+     *             "data": {
+    *                   "id": "1",
+    *                   "name": "Produto A",
+    *                   "description": "Descrição do Produto A",
+    *                   "price": "99.90"
+    *               }
+     *         }
+     *     }
+     */
     public function show($id = null)
     {
         try {
             $data = $this->model->find($id);
 
-            if (!$data) $this->formatResponse($this->request->getGet(), 404, 'Produto não encontrado', ['data' => $data]);
-            return $this->formatResponse($this->request->getGet(), 200, 'Produto encontrado com sucesso', $data);
+            if (!$data) $this->formatResponse($this->request->getGet(), 404, 'Produto não encontrado', $data);
+            return $this->formatResponse($this->request->getGet(), 200, 'Produto encontrado com sucesso',  ['data' => $data]);
         } catch (Exception $e) {
             return $this->formatResponse(
                 $this->request->getGet(),
@@ -50,25 +122,87 @@ class ProductsController extends ResourceController
         }
     }
 
-    // Criar um novo produto (POST api/products)
+    /**
+     * Criação de produto.
+     *
+     * @api {post} /api/products Criar Produto
+     * @apiName CreateProduct
+     * @apiGroup Products
+     *
+     * @apiBody {String} name Nome do produto.
+     * @apiBody {String} description breve descrição do produto.
+     * @apiBody {Number} price Preço do produto.
+     *
+     * @apiSuccessExample {json} Sucesso:
+     *     HTTP/1.1 201 Created
+     *     {
+     *         "parametros": {
+     *             "name": "Produto A",
+     *              "description": "Ótimo produto",
+     *              "price": 10.99
+     *         },
+     *         "cabecalho": {
+     *             "status": 201,
+     *             "message": "Pedido criado com sucesso"
+     *         },
+     *         "retorno": {
+     *             "data": {
+     *                 "id": 1,
+     *                 "name": "Produto A",
+     *                 "description": "Ótimo produto",
+     *                 "price": "10.99
+     *             }
+     *         }
+     *     }
+     */
     public function create()
     {
         try {
             $data = $this->request->getJSON();
             $productId = $this->model->insert($data);
 
-            if ($productId) return $this->formatResponse($this->request->getGet(), 201, 'Produto criado com sucesso', ['data' => $this->model->find($productId)]);
-            return $this->formatResponse($this->request->getGet(), 400, 'Falha ao criar produto', $this->model->errors());
+            if ($productId) return $this->formatResponse($data, 201, 'Produto criado com sucesso', ['data' => $this->model->find($productId)]);
+            return $this->formatResponse($data, 400, 'Falha ao criar produto', $this->model->errors());
         } catch (Exception $e) {
             return $this->formatResponse(
-                $this->request->getGet(),
+                $this->request->getJSON(),
                 500,
                 $e->getMessage()
             );
         }
     }
 
-    // Atualizar um produto existente (PUT api/products/{id})
+    /**
+     * Atualização de usuário.
+     *
+     * @api {put} /api/products/1 Atualizar Produto
+     * @apiName UpdateProduct
+     * @apiGroup Products
+     *
+     * @apiBody {String} name Nome do produto.
+     * @apiBody {String} description breve descrição do produto.
+     * @apiBody {Number} price Preço do produto.
+     *
+     * @apiSuccessExample {json} Sucesso:
+     *     HTTP/1.1 200 Ok
+     *     {
+     *         "parametros": {
+     *             "price": "50.99"
+     *         },
+     *         "cabecalho": {
+     *             "status": 200,
+     *             "message": "Produto atualizado com sucesso"
+     *         },
+     *         "retorno": {
+     *             "data": {
+     *                 "id": 30,
+     *                 "name": "Produto A",
+     *                 "description": "Ótimo produto",
+     *                 "price": 50.99
+     *             }
+     *         }
+     *     }
+     */
     public function update($id = null)
     {
         try {
@@ -85,7 +219,26 @@ class ProductsController extends ResourceController
         }
     }
 
-    // Excluir um produto (DELETE api/products/{id})
+     /**
+     * Exclusão de produto.
+     *
+     * @api {del} /api/users/1 Remover Produto
+     * @apiName DeleteProduct
+     * @apiGroup Products
+     *
+     * @apiSuccessExample {json} Sucesso:
+     *     HTTP/1.1 200 Ok
+     *     {
+     *         "parametros": [],
+     *         "cabecalho": {
+     *             "status": 200,
+     *             "message": "Produto removido com sucesso"
+     *         },
+     *         "retorno": {
+     *             "data": null
+     *         }
+     *     }
+     */
     public function delete($id = null)
     {
         try {

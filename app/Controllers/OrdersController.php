@@ -31,7 +31,59 @@ class OrdersController extends ResourceController
         $this->model = model('OrderModel');
     }
 
-    // Listar pedidos (GET api/orders)
+    /**
+     * Retorna uma lista de pedidos com paginação.
+     *
+     * @api {get} /api/orders Listar Pedidos
+     * @apiName ListOrders
+     * @apiGroup Orders
+     *
+     * @apiQuery {Number} [page=1] Número da página a ser retornada.
+     * @apiQuery {Number} [perPage=10] Número de itens por página.
+     *
+     * @apiSuccessExample {json} Sucesso:
+     *     HTTP/1.1 200 OK
+     *     {
+     *         "parametros": [],
+     *         "cabecalho": {
+     *             "status": 200,
+     *             "message": "Lista de pedidos retornada com sucesso"
+     *         },
+     *         "retorno": {
+     *             "data": [
+     *                 {
+     *                     "id": "1",
+     *                     "status": "cancelado",
+     *                     "user_id": "25",
+     *                     "total_value": "100.00",
+     *                     "created_at": "2025-02-27 09:55:57",
+     *                     "updated_at": "2025-02-27 17:33:12"
+     *                 },
+     *                 {
+     *                     "id": "2",
+     *                     "status": "pendente",
+     *                     "user_id": "27",
+     *                     "total_value": "130.00",
+     *                     "created_at": "2025-02-27 09:58:43",
+     *                     "updated_at": "2025-02-27 09:58:43"
+     *                 }
+     *             ],
+     *             "pager": {
+     *                 "currentUri": {},
+     *                 "uri": {},
+     *                 "hasMore": false,
+     *                 "total": 2,
+     *                 "perPage": 10,
+     *                 "pageCount": 1,
+     *                 "pageSelector": "page",
+     *                 "currentPage": 1,
+     *                 "next": null,
+     *                 "previous": null,
+     *                 "segment": 0
+     *             }
+     *         }
+     *     }
+     */
     public function index()
     {
         try {
@@ -54,7 +106,32 @@ class OrdersController extends ResourceController
         }
     }
 
-   // Mostrar um pedido específico (GET api/orders/{id})
+   /**
+     * Retorna um pedido.
+     *
+     * @api {get} /api/orders/1 Busca Pedido
+     * @apiName ShowOrders
+     * @apiGroup Orders
+     *
+     * @apiSuccessExample {json} Sucesso:
+     *     HTTP/1.1 200 OK
+     *     {
+     *         "parametros": [],
+     *         "cabecalho": {
+     *             "status": 200,
+     *             "message": "Pedido encontradoa com sucesso"
+     *         },
+     *         "retorno": {
+     *             "data": {
+     *                     "id": "1",
+     *                     "status": "cancelado",
+     *                     "user_id": "25",
+     *                     "total_value": "100.00",
+     *                     "created_at": "2025-02-27 09:55:57",
+     *                     "updated_at": "2025-02-27 17:33:12"
+     *                }
+     *          }
+     */
     public function show($id = null)
     {
         try {
@@ -62,10 +139,10 @@ class OrdersController extends ResourceController
             $userRole = $this->request->urole;
             $data = $this->model->find($id);
 
-            if (!$data) return $this->formatResponse($this->request->getGet(), 404, 'Pedido não encontrado', ['data' => $data]);
+            if (!$data) return $this->formatResponse($this->request->getGet(), 404, 'Pedido não encontrado', $data);
             if ($userRole != 'admin' && $userId != $data['user_id']) return $this->formatResponse($this->request->getGet(), 403, 'Acesso negado');
            
-            return $this->formatResponse($this->request->getGet(), 200, 'Pedido encontrado com sucesso', $data);
+            return $this->formatResponse($this->request->getGet(), 200, 'Pedido encontrado com sucesso', ['data' => $data]);
         } catch (Exception $e) {
             return $this->formatResponse(
                 $this->request->getGet(),
@@ -75,7 +152,49 @@ class OrdersController extends ResourceController
         }
     }
 
-    // Criar um novo pedido (POST api/orders)
+    /**
+     * Criação de pedido.
+     *
+     * @api {post} /api/orders Criar Pedido
+     * @apiName CreateOrder
+     * @apiGroup Orders
+     *
+     * @apiBody {String} status Status do pedido (pendente ou pago).
+     * @apiBody {Number} user_id Id do usuário.
+     * @apiBody {Array} products Lista de produtos do pedido con suas respectivas quantidades.
+     * @apiBody {Object} product item do pedido.
+     * @apiBody {String} product.product_id Id do produto
+     * @apiBody {Number} product.quantity Quantidade do produto
+     *
+     * @apiSuccessExample {json} Sucesso:
+     *     HTTP/1.1 200 Ok
+     *     {
+     *         "parametros": {
+     *             "status": "pendente",
+     *              "user_id": 25,
+     *              "products": [
+	 *		            {
+	 * 			            "product_id": 6,
+	 *			            "quantity": 1
+	 *		            }
+     *              ]
+     *         },
+     *         "cabecalho": {
+     *             "status": 200,
+     *             "message": "Pedido criado com sucesso"
+     *         },
+     *         "retorno": {
+     *             "data": {
+     *                 "id": 1,
+     *                 "status": "pendente",
+     *                 "user_id": "25",
+     *                 "total_value": "100.00",
+     *                 "created_at": "2025-02-27 09:55:57",
+     *                 "updated_at": "2025-02-27 19:44:16"
+     *             }
+     *         }
+     *     }
+     */
     public function create()
     {
         try {
@@ -87,7 +206,7 @@ class OrdersController extends ResourceController
 
             $data->total_value = $this->calculate($orderId);
 
-            return $this->formatResponse($this->request->getGet(), 201, 'Pedido criado com sucesso', ['data' => $this->model->find($orderId)]);
+            return $this->formatResponse($this->request->getJSON(), 201, 'Pedido criado com sucesso', ['data' => $this->model->find($orderId)]);
         } catch (Exception $e) {
             return $this->formatResponse(
                 $this->request->getGet(),
@@ -98,7 +217,41 @@ class OrdersController extends ResourceController
         }
     }
 
-    // Cancelar ou modificar pedido
+    /**
+     * Atualização de pedido.
+     *
+     * @api {put} /api/orders/1 Atualizar Pedido
+     * @apiName UpdateOrder
+     * @apiGroup Orders
+     *
+     * @apiBody {String} status Status do pedido.
+     * @apiBody {Array} products Lista de produtos do pedido con suas respectivas quantidades.
+     * @apiBody {Object} product item do pedido.
+     * @apiBody {String} product.product_id Id do produto
+     * @apiBody {Number} product.quantity Quantidade do produto
+     *
+     * @apiSuccessExample {json} Sucesso:
+     *     HTTP/1.1 200 Ok
+     *     {
+     *         "parametros": {
+     *             "status": "pago"
+     *         },
+     *         "cabecalho": {
+     *             "status": 200,
+     *             "message": "Pedido atualizado com sucesso"
+     *         },
+     *         "retorno": {
+     *             "data": {
+     *                 "id": 1,
+     *                 "status": "pago",
+     *                 "user_id": "25",
+     *                 "total_value": "100.00",
+     *                 "created_at": "2025-02-27 09:55:57",
+     *                 "updated_at": "2025-02-27 19:44:16"
+     *             }
+     *         }
+     *     }
+     */
     public function update($id = null)
     {
         try {
@@ -112,7 +265,7 @@ class OrdersController extends ResourceController
 
             $data->total_value = $this->calculate($order['id']);
 
-            if ($this->model->update($id, $data)) return $this->formatResponse($this->request->getGet(), 200, 'Pedido atualizado com sucesso', ['data' => $this->model->find($order['id'])]);
+            if ($this->model->update($id, $data)) return $this->formatResponse($this->request->getJSON(), 200, 'Pedido atualizado com sucesso', ['data' => $this->model->find($order['id'])]);
         } catch (Exception $e) {
             return $this->formatResponse(
                 $this->request->getGet(),
